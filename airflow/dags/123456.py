@@ -10,7 +10,7 @@ default_args = {
 
 with DAG('ABC',
          default_args=default_args,
-         schedule_interval='@None',
+         schedule_interval='@once',
          catchup=False) as dag:
 
     start = DummyOperator(task_id='start')
