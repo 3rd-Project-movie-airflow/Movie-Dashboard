@@ -119,7 +119,7 @@ Github Actions가 실행될 yml 파일 작성
     
 - 지역별 top10 매출액 합 (주마다 갱신)
     
-    [weekly_region_sales_top10SUM dag를 이용](https://www.notion.so/1-6d82b2f9e56f4407abcb148695b4c936?pvs=21)
+    weekly_region_sales_top10SUM dag를 이용
     
     진한 파란색일수록 매출액이 많고, 진한 핑크일수록 매출액이 적음
     
@@ -127,7 +127,7 @@ Github Actions가 실행될 yml 파일 작성
     
 - 지역별 영화순위별 관람객수 (주마다 갱신)
     
-    [weekly_region_audience_top10 dag이용](https://www.notion.so/1-6d82b2f9e56f4407abcb148695b4c936?pvs=21)
+    weekly_region_audience_top10 dag이용
     
     관람객 수의 비율을 쉽게 확인할 수 있고, 1,2,3위 순서대로 아래서부터 stack
     
