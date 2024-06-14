@@ -20,7 +20,7 @@ jobs:
       with:
         version: 'latest'
         service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-        project_id: My First Project
+        project_id: centering-talon-426107-r3
 
     - name: Upload DAGs to GCS
       run: |
