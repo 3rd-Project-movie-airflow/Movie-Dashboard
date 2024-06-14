@@ -2,29 +2,26 @@ name: Upload DAGs to GCS
 
 on:
   push:
-    paths:
-      - 'airflow/dags/**'
     branches:
       - main
 
 jobs:
-  upload-to-gcs:
+  deploy:
     runs-on: ubuntu-latest
-    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v1
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v0.2.0
       with:
-        credentials_json: ${{ secrets.GCP_KEY }}
+        version: 'latest'
+        project_id: ${{ secrets.GCP_PROJECT }} 
+        service_account_key: ${{ secrets.GCP_KEY }}
 
-    - name: Setup Google Cloud SDK
-      uses: google-github-actions/setup-gcloud@v1
-      with:
-        project_id: centering-talon-426107-r3
-
-    - name: Sync DAGs to GCS
+    - name: Deploy to Composer
       run: |
-        gsutil -m rsync -r airflow/dags gs://us-central1-project3-compos-784ceb80-bucket/dags/
+        gcloud composer environments storage dags import \
+          --environment ${{ secrets.GCP_COMPOSER_ENVIRONMENT }} \
+          --location ${{ secrets.GCP_REGION }} \
+          --source airflow/dags/
