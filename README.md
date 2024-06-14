@@ -20,51 +20,20 @@
 ### Github Actions 사용하여 클라우드 컴포저의 Dags 파일과 연동
 
 1. 클라우드 컴포저의 IAM에서 서비스 계정 생성 >> 적당한 역할 부여 
-- 이 과정에서 역할에 대한 오류가 발생하여 가장 높은 등급인 소유자 역할 부여
-- 실무 환경에서는 보안 이슈가 존재한다고 생각하며 역할에 대한 공부를 통해 최소한의 역할을 부여하는 것이 좋다고 생각한다.
+    - 이 과정에서 역할에 대한 오류가 발생하여 가장 높은 등급인 소유자 역할 부여
+    - 실무 환경에서는 보안 이슈가 존재한다고 생각하며 역할에 대한 공부를 통해 최소한의 역할을 부여하는 것이 좋다고 생각한다.
 2. 서비스 계정을 선택하고 키 생성
-- json 형식으로 생성하고 이 키를 5번의 변수에 저장해야함
+    - json 형식으로 생성하고 이 키를 5번의 변수에 저장해야함
 3. 구글 클라우드 스토리지에서 서비스 계정에 대한 접근 권한 설정
 4. Github Action의 yml파일에서 사용될 변수들을 시크릿으로 저장
 **Repositories**의 설정 >> 왼쪽 목록에서  **secrets and variables** >> **Actions**에 변수로 저장
 사용 변수
-- GCP_REGION (클라우드 컴포저의 위치 us-***), 
-- GCP_PROJECT (내 프로젝트의 id ‘My First Project’가 아닌 id 존재 avd-csa-***-n3 )
-- GCP_KEY (2번에서 생성한 json 파일 그대로 입력)
+    - GCP_REGION (클라우드 컴포저의 위치 us-***), 
+    - GCP_PROJECT (내 프로젝트의 id ‘My First Project’가 아닌 id 존재 avd-csa-***-n3 )
+    - GCP_KEY (2번에서 생성한 json 파일 그대로 입력)
 5. Github의 루트 폴더에 .github/workflows/ 생성 후 workflow 폴더 아래에 
 Github Actions가 실행될 yml 파일 작성
-    - 사용 코드
-        
-        ```yaml
-        name: Upload DAGs to GCS
-        
-        on:
-          push:
-            branches:
-              - main
-            paths:
-        	    - airflow/dags/**
-        
-        jobs:
-          deploy:
-            runs-on: ubuntu-latest
-            steps:
-            - name: Checkout repository
-              uses: actions/checkout@v2
-        
-            - name: Set up Cloud SDK
-              uses: google-github-actions/setup-gcloud@v0.2.0
-              with:
-                version: 'latest'
-                project_id: ${{ secrets.GCP_PROJECT }} 
-                service_account_key: ${{ secrets.GCP_KEY }}
-        
-            - name: Sync DAGs to GCS
-              run: |
-                gsutil -m rsync -r airflow/dags 클라우드 컴포저의 dag버킷 경로
-        ```
-        
-    
+
     airflow/dags 폴더의 변경사항이 있을 때 airflow/dags 폴더와 클라우드 스토리지 미러링
     
 
@@ -114,189 +83,10 @@ Github Actions가 실행될 yml 파일 작성
     - 매일 12시 00분 하루전 boxoffice top10 영화의 관객 수 업데이트
 - weekly_region_audience_top10
     - 매주 월요일 0시 10분 지역별 top10영화의 개별 관객수
-        
-        ### task
-        
-        get_last_sunday → extracted_transformed_data  → Load
-        
-        - get_last_sunday
-            
-            ```python
-            @task
-            def get_last_sunday():
-                today = datetime.today()
-                weekday = today.weekday() + 1  # 월요일은 0, 일요일은 6
-                last_sunday = today - timedelta(days=weekday)
-                return last_sunday.strftime('%Y%m%d')
-            ```
-            
-        - extracted_transformed_data (깔끔하게 작성하지 못해 가장 아쉽다)
-            
-            ```python
-            @task
-            def ET_get_area_code(last_sunday, schema):
-                cur = get_Redshift_connection()
-                get_regions_sql = f"SELECT * FROM {schema}.area_codes;"
-                cur.execute(get_regions_sql)
-                regions = cur.fetchall()
-                sales_for_regions = {}
-                for row in regions:
-                    area_code = row[1]
-                    region_name = row[2]
-                    url = Variable.get("api_key") + f"&targetDt={last_sunday}&weekGb=0&wideAreaCd=0{area_code}"
-                    response = requests.get(url)
-                    data = response.json()
-                    logging.info(f"Extracting data for date: {last_sunday} {region_name}")
-                    lines = data["boxOfficeResult"]["weeklyBoxOfficeList"]
-                    sales = sum(int(line["salesAmt"]) for line in lines)
-                    sales_for_regions[region_name] = sales
-                    logging.info(f"Transform ended for {region_name}")
-                return sales_for_regions
-            ```
-            
-        - Load
-            
-            ```python
-            @task
-            def Load(schema, table, records): #records에는 딕셔너리가 들어감
-                logging.info("Load started")
-                cur = get_Redshift_connection()
-                try:
-                    cur.execute("BEGIN;")
-                    cur.execute(f"""
-                        CREATE TABLE IF NOT EXISTS {schema}.{table} (
-                            region_name VARCHAR(50),
-                            rank1 BIGINT, #작은규모의 데이터이고, 43억이
-                            rank2 BIGINT, 
-                            rank3 BIGINT, 
-                            rank4 BIGINT, 
-                            rank5 BIGINT,
-                            rank6 BIGINT, 
-                            rank7 BIGINT, 
-                            rank8 BIGINT, 
-                            rank9 BIGINT, 
-                            rank10 BIGINT
-                        );
-                    """)
-                    for key, value in records.items():
-                        sql = f"""
-                        INSERT INTO {schema}.{table} (region_name, rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8, rank9, rank10)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                        """
-                        cur.execute(sql, [key] + value)
-                    cur.execute("COMMIT;")
-                except Exception as error:
-                    logging.error(error)
-                    cur.execute("ROLLBACK;")
-                logging.info("Load done")
-            ```
-            
-        
 - weekly_region_sales_top10SUM
     - 매주 월요일 0시 10분 지역별 top10영화의 총 매출 합(주간매출)
     - top 10 영화가 지역마다 다를 가능성이 있다는 점을 배제하고 만듦.
         
-        ### task
-        
-        get_last_sunday → extracted_transformed_data  → Load → Join
-        
-        오류가 있었어서 중간중간 logging이 들어가있다.
-        
-        - get_last_sunday
-            
-            ```python
-            @task
-            def get_last_sunday():
-                today = datetime.today()
-                weekday = today.weekday() + 1  # 월요일은 0, 일요일은 6
-                last_sunday = today - timedelta(days=weekday)
-                return last_sunday.strftime('%Y%m%d')
-            ```
-            
-        - extracted_transformed_data (깔끔하게 작성하지 못해 가장 아쉽다)
-            
-            ```python
-            @task
-            def ET_get_area_code(last_sunday, schema):
-                cur = get_Redshift_connection()
-                get_regions_sql = f"SELECT * FROM {schema}.area_codes;"
-                cur.execute(get_regions_sql)
-                regions = cur.fetchall()
-                sales_for_regions = {}
-                for row in regions:
-                    area_code = row[1]
-                    region_name = row[2]
-                    url = Variable.get("api_key") + f"&targetDt={last_sunday}&weekGb=0&wideAreaCd=0{area_code}"
-                    response = requests.get(url)
-                    data = response.json()
-                    logging.info(f"Extracting data for date: {last_sunday} {region_name}")
-                    lines = data["boxOfficeResult"]["weeklyBoxOfficeList"]
-                    sales = sum(int(line["salesAmt"]) for line in lines)
-                    sales_for_regions[region_name] = sales
-                    logging.info(f"Transform ended for {region_name}")
-                return sales_for_regions
-            ```
-            
-        - Load
-            
-            ```python
-            @task
-            def Load(schema, table, records):
-                logging.info("Load started")
-                cur = get_Redshift_connection()
-                try:
-                    cur.execute("BEGIN;")
-                    cur.execute(f"""
-                        CREATE TABLE IF NOT EXISTS {schema}.{table} (
-                            region_name VARCHAR(50),
-                            sales_thisweek BIGINT
-                        );
-                    """)
-                    cur.execute(f"DELETE FROM {schema}.{table};")
-                    insert_sql = f"""
-                        INSERT INTO {schema}.{table} (region_name, sales_thisweek)
-                        VALUES (%s, %s);
-                    """
-                    for key, value in records.items():
-                        cur.execute(insert_sql, (key, value))
-                    cur.execute("COMMIT;")
-                except Exception as error:
-                    logging.error(error)
-                    cur.execute("ROLLBACK;")
-                logging.info("Load done")
-            
-            ```
-            
-        - Join
-            
-            ```python
-            @task
-            def join_tables(schema, output_table):
-                cur = get_Redshift_connection()
-                try:
-                    cur.execute("BEGIN;")
-                    drop_table_query = f"DROP TABLE IF EXISTS {schema}.{output_table};"
-                    logging.info(f"Executing query: {drop_table_query}")
-                    cur.execute(drop_table_query)
-                    join_query = f"""
-                    CREATE TABLE {schema}.{output_table} AS
-                    SELECT wa.region_name, wa.sales_thisweek, md.dept_id
-                    FROM {schema}.weekly_sales_top10SUM wa
-                    JOIN {schema}.area_codes md
-                    ON wa.region_name = md.dept_name;
-                    """
-                    logging.info(f"Executing query: {join_query}")
-                    cur.execute(join_query)
-                    cur.execute("COMMIT;")  # 트랜잭션 커밋
-                    logging.info(f"Joined data inserted into {schema}.{output_table} successfully")
-                except Exception as error:
-                    logging.error(error)
-                    cur.execute("ROLLBACK;")  # 트랜잭션 롤백
-                    raise
-            ```
-            
-        
-
 ### Preset을 이용한 차트 생성 및 대시보드 구성
 
 ![영화-2024-06-13T07-11-14.048Z.jpg](11%208742b1ebe3064adda82a54373f1d50ee/%25E1%2584%258B%25E1%2585%25A7%25E1%2586%25BC%25E1%2584%2592%25E1%2585%25AA-2024-06-13T07-11-14.048Z.jpg)
