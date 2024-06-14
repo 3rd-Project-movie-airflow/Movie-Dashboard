@@ -15,7 +15,7 @@
 
 ### 공동 작업을 위한 프로젝트 환경 구성
 
-![Untitled](11%208742b1ebe3064adda82a54373f1d50ee/Untitled.png)
+![Untitled](Image_folder/Untitled.png)
 
 ### Github Actions 사용하여 클라우드 컴포저의 Dags 파일과 연동
 
@@ -58,12 +58,12 @@ Github Actions가 실행될 yml 파일 작성
     
 - 데이터 테이블
     
-    ![3차 프로젝트 ERD.drawio.png](11%208742b1ebe3064adda82a54373f1d50ee/3%25E1%2584%258E%25E1%2585%25A1_%25E1%2584%2591%25E1%2585%25B3%25E1%2584%2585%25E1%2585%25A9%25E1%2584%258C%25E1%2585%25A6%25E1%2586%25A8%25E1%2584%2590%25E1%2585%25B3_ERD.drawio.png)
+    ![3차 프로젝트 ERD.drawio.png](Image_folder/3%25E1%2584%258E%25E1%2585%25A1_%25E1%2584%2591%25E1%2585%25B3%25E1%2584%2585%25E1%2585%25A9%25E1%2584%258C%25E1%2585%25A6%25E1%2586%25A8%25E1%2584%2590%25E1%2585%25B3_ERD.drawio.png)
     
 
 ### 일간/주간 업데이트를 위한 Airflow DAG 작성
 
-![Untitled](11%208742b1ebe3064adda82a54373f1d50ee/Untitled%201.png)
+![Untitled](Image_folder/Untitled%201.png)
 
 - boxoffice_news
     - 매일 12시 00분 하루전 boxoffice top10 영화의 네이버 뉴스 링크
@@ -89,7 +89,7 @@ Github Actions가 실행될 yml 파일 작성
         
 ### Preset을 이용한 차트 생성 및 대시보드 구성
 
-![영화-2024-06-13T07-11-14.048Z.jpg](11%208742b1ebe3064adda82a54373f1d50ee/%25E1%2584%258B%25E1%2585%25A7%25E1%2586%25BC%25E1%2584%2592%25E1%2585%25AA-2024-06-13T07-11-14.048Z.jpg)
+![영화-2024-06-13T07-11-14.048Z.jpg](Image_folder/%25E1%2584%258B%25E1%2585%25A7%25E1%2586%25BC%25E1%2584%2592%25E1%2585%25AA-2024-06-13T07-11-14.048Z.jpg)
 
 대시보드 위쪽은 박스오피스, 관객수, 개봉영화추이 아래쪽은 지역별 데이터를 나타냄
 
@@ -159,7 +159,7 @@ Github Actions가 실행될 yml 파일 작성
 
 # 4. 활용 기술
 
-![Untitled](11%208742b1ebe3064adda82a54373f1d50ee/Untitled%202.png)
+![Untitled](Image_folder/Untitled%202.png)
 
 | 데이터 파이프라인 | Airflow |
 | --- | --- |
@@ -173,4 +173,4 @@ Github Actions가 실행될 yml 파일 작성
 
 **영화진흥위원회 데이터를 활용한 대시보드**
 
-![영화-2024-06-13T07-11-14.048Z.jpg](11%208742b1ebe3064adda82a54373f1d50ee/bdf9cec0-c9c1-44eb-bd3a-7f41b50796d6.png)
+![영화-2024-06-13T07-11-14.048Z.jpg](Image_folder/bdf9cec0-c9c1-44eb-bd3a-7f41b50796d6.png)
