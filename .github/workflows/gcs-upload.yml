@@ -19,9 +19,9 @@ jobs:
       uses: google-github-actions/setup-gcloud@v1
       with:
         version: 'latest'
-        service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        service_account_key: ${{ secrets.GCP_KEY }}
         project_id: centering-talon-426107-r3
 
-    - name: Upload DAGs to GCS
+    - name: Sync DAGs to GCS
       run: |
-        gsutil -m cp -r airflow/dags/* gs://us-central1-project3-compos-784ceb80-bucket/dags/
+        gsutil -m rsync -r airflow/dags gs://us-central1-project3-compos-784ceb80-bucket/dags/
