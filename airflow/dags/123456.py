@@ -8,7 +8,7 @@ default_args = {
     'retries': 1
 }
 
-with DAG('dummy_dag',
+with DAG('ABC',
          default_args=default_args,
          schedule_interval='@None',
          catchup=False) as dag:
