@@ -22,10 +22,3 @@ jobs:
     - name: Sync DAGs to GCS
       run: |
         gsutil -m rsync -r airflow/dags gs://us-central1-project3-compos-784ceb80-bucket/dags/
-
-    - name: Deploy to Composer
-      run: |
-        gcloud composer environments storage dags import \
-          --environment ${{ secrets.GCP_COMPOSER_ENVIRONMENT }} \
-          --location ${{ secrets.GCP_REGION }} \
-          --source gs://us-central1-project3-compos-784ceb80-bucket/dags/
