@@ -1,0 +1,27 @@
+name: Upload DAGs to GCS
+
+on:
+  push:
+    paths:
+      - 'airflow/dags/**'
+    branches:
+      - main
+
+jobs:
+  upload-to-gcs:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      
+    - name: Setup Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        version: 'latest'
+        service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        project_id: My First Project
+
+    - name: Upload DAGs to GCS
+      run: |
+        gsutil -m cp -r airflow/dags/* gs://us-central1-project3-compos-784ceb80-bucket/dags/
