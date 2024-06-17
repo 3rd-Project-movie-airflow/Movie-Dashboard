@@ -9,6 +9,7 @@ import requests
 import logging
 import psycopg2
 import pandas as pd
+import io
 
 
 def get_Redshift_connection(autocommit=True):
@@ -31,17 +32,18 @@ def fetch_movie_seat_cnt():
     values = [clean_data[i:i+num_columns] for i in range(1, len(clean_data), num_columns + 6)]  # 각 지역별 값 추출
     
     df = pd.DataFrame(values, columns=['CINEMA_CNT', 'SCREEN_CNT', 'SEAT_CNT'])
-    df.insert(0, 'DEPT_NAME, ', regions)
+    df.insert(0, 'DEPT_NAME', regions)
     
     df = df[:17] # 합계 컬럼 제거
     df['CINEMA_CNT'] = pd.to_numeric(df['CINEMA_CNT'], errors='coerce')
     df['SCREEN_CNT'] = pd.to_numeric(df['SCREEN_CNT'], errors='coerce')
     df['SEAT_CNT'] = df['SEAT_CNT'].str.replace(',', '').astype(int)
-    return df
     
+    return df.to_csv(index=False)
 
 @task
-def etl(df):
+def etl(csv_data):
+    df = pd.read_csv(io.StringIO(csv_data))
     cur = get_Redshift_connection()
     
     try:
@@ -62,7 +64,7 @@ def etl(df):
         insert_query = "INSERT INTO dev.zkvmek963.area_cinema (DEPT_NAME, CINEMA_CNT, SCREEN_CNT, SEAT_CNT) VALUES (%s, %s, %s, %s)"
 
         for data in df.values.tolist(): # df.values.tolist() >> df를 2차원 리스트로 변환
-            cur.execute(insert_query, (data[0], data[1], data[2],data[3]))
+            cur.execute(insert_query, (data[0], data[1], data[2], data[3]))
 
         # 변경 사항 커밋
         cur.execute("COMMIT;")
@@ -86,7 +88,7 @@ with DAG(
     'Movie_Area_Cinema_Count',
     default_args=default_args,
     description='Number of movie theaters by region',
-    schedule ='0 1 * * 1',
+    schedule_interval='0 1 * * 1',
     start_date=datetime(2024, 6, 1),
     catchup=False,
 ) as dag:
